@@ -79,6 +79,8 @@ def calculate_gpa_with_prolog(modules):
     total_grade_points = sum(m['Credits'] * m['GradePoints'] for m in modules)  # Use dictionary keys
     total_credits = sum(m['Credits'] for m in modules)  # Use dictionary keys
 
+
+    # edit calculations *********
     cumulative_query = list(prolog.query(
         f"calculate_cumulative_gpa({gpa_sem1}, {gpa_sem2}, CumulativeGPA)"
     ))
