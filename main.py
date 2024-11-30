@@ -111,7 +111,7 @@ def generate_report(student_id, year):
     # Print Report
     print("\n--- University of Technology ---")
     print("Academic Probation Alert GPA Report")
-    print(f"Year: {year}")
+    print(f"\nYear: {year}")
     print(f"Student ID: {student['StudentId']}")
     print(f"Name: {student['StudentName']}")
     print(f"School: {student['School']}")
@@ -140,13 +140,16 @@ def main():
     else:
         print("Invalid choice. Exiting.")
 
-    # Ask if the user wants to run the program again
+        # Ask if the user wants to run the program again
     again = input("\nWould you like to run again? (yes/no): ").strip().lower()
-    if again == 'yes' or 'y':
+    if again in ['yes', 'y']:
         main()  # Run the program again
+    elif again in ['no', 'n']:
+        print("Exiting the program. Have a good day!")
+        exit()  # Exit the program
     else:
-        print("Exiting. Have a Nice Day!")
-
+        print("Invalid input. Exiting the program. Have a good day!")
+        exit()  # Exit on invalid input
 
 if __name__ == "__main__":
     main()
