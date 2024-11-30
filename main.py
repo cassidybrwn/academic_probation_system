@@ -37,10 +37,10 @@ def get_student_data(student_id, year):
         student = cursor.fetchone()
 
         # Fetch module grades for the student
-        cursor.execute(""" 
-            SELECT m.ModuleName, d.Year, d.Semester, m.Credits, d.GradePoints 
-            FROM ModuleDetails d 
-            JOIN ModuleMaster m ON d.ModuleID = m.ModuleID 
+        cursor.execute("""
+            SELECT m.ModuleName, d.Year, d.Semester, m.Credits, d.GradePoints
+            FROM ModuleDetails d
+            JOIN ModuleMaster m ON d.ModuleID = m.ModuleID
             WHERE d.StudentId = %s AND d.Year = %s
         """, (student_id, year))
         modules = cursor.fetchall()
@@ -56,41 +56,30 @@ def get_student_data(student_id, year):
 
 def calculate_gpa_with_prolog(modules):
     """Calculate GPA and cumulative GPA using Prolog."""
-    # Separate modules by semester
     sem1_modules = [m for m in modules if m['Semester'] == '1']
-    sem2_modules = [m for m in modules if m['Semester'] == '2']    
+    sem2_modules = [m for m in modules if m['Semester'] == '2']
 
-    # Helper function to calculate GPA
     def calculate_semester_gpa(modules):
-        total_grade_points = sum(m['Credits'] * m['GradePoints'] for m in modules)  # Use dictionary keys
-        total_credits = sum(m['Credits'] for m in modules)  # Use dictionary keys
-
+        total_grade_points = sum(m['Credits'] * m['GradePoints'] for m in modules)
+        total_credits = sum(m['Credits'] for m in modules)
         if total_credits == 0:
             return 0.0
-
         query = list(prolog.query(f"calculate_gpa({total_grade_points}, {total_credits}, GPA)"))
         return query[0]['GPA'] if query else 0.0
 
-    # Calculate semester GPAs
     gpa_sem1 = calculate_semester_gpa(sem1_modules)
     gpa_sem2 = calculate_semester_gpa(sem2_modules)
 
-    # Calculate cumulative GPA
     sem1_grade_points = sum(m['Credits'] * m['GradePoints'] for m in sem1_modules)
     sem1_credits = sum(m['Credits'] for m in sem1_modules)
-    
+
     sem2_grade_points = sum(m['Credits'] * m['GradePoints'] for m in sem2_modules)
     sem2_credits = sum(m['Credits'] for m in sem2_modules)
 
-    # Query Prolog for cumulative GPA calculation
     cumulative_query = list(prolog.query(
         f"calculate_cumulative_gpa({sem1_grade_points}, {sem1_credits}, {sem2_grade_points}, {sem2_credits}, CumulativeGPA)"
     ))
-
-    if cumulative_query:
-        cumulative_gpa = cumulative_query[0]['CumulativeGPA']
-    else:
-        cumulative_gpa = gpa_sem1  # If no Semester 2 data, fallback to Semester 1 GPA
+    cumulative_gpa = cumulative_query[0]['CumulativeGPA'] if cumulative_query else gpa_sem1
 
     return gpa_sem1, gpa_sem2, cumulative_gpa
 
@@ -103,12 +92,9 @@ def generate_report(student_id, year):
         return
 
     gpa_sem1, gpa_sem2, cumulative_gpa = calculate_gpa_with_prolog(modules)
-
-    # Check academic probation status
     probation_query = list(prolog.query(f"check_academic_probation({cumulative_gpa}, Status)"))
     status = probation_query[0]['Status'] if probation_query else "Unknown"
 
-    # Print Report
     print("\n--- University of Technology ---")
     print("Academic Probation Alert GPA Report")
     print(f"\nYear: {year}")
@@ -122,34 +108,52 @@ def generate_report(student_id, year):
     print(f"Status: {status}")
 
 
+def login():
+    """Login function to authenticate users."""
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ").strip()
+
+    if username == "student" and password == "student":
+        return "student"
+    elif username == "admin" and password == "admin":
+        return "admin"
+    else:
+        print("Invalid credentials. Exiting.")
+        return None
+
+
 def main():
     """Main program flow."""
     print("Welcome to the GPA Monitoring System")
-    print("1. Generate Student Report")
-    print("2. Update Default GPA")
-    choice = input("Enter your choice: ")
 
-    if choice == "1":
+    role = login()
+    if role == "student":
+        print("Student Mode: Generate your GPA report.\n")
+        student_id = int(input("Enter your Student ID: "))
+        year = int(input("Enter the Year: "))
+        generate_report(student_id, year)
+    elif role == "admin":
+        print("Admin Mode: Record a student's details.\n")
         student_id = int(input("Enter Student ID: "))
         year = int(input("Enter Year: "))
+        desired_gpa = input("Enter desired GPA (optional): ").strip()
+        if desired_gpa:
+            print(f"Admin: GPA {desired_gpa} recorded for Student ID {student_id}, Year {year}.")
         generate_report(student_id, year)
-    elif choice == "2":
-        new_gpa = float(input("Enter new default GPA: "))
-        prolog.query(f"update_default_gpa({new_gpa})")
-        print("Default GPA updated successfully!")
     else:
-        print("Invalid choice. Exiting.")
+        exit()
 
-        # Ask if the user wants to run the program again
+    # Ask if the user wants to run the program again
     again = input("\nWould you like to run again? (yes/no): ").strip().lower()
     if again in ['yes', 'y']:
-        main()  # Run the program again
+        main()
     elif again in ['no', 'n']:
         print("Exiting the program. Have a good day!")
-        exit()  # Exit the program
+        exit()
     else:
         print("Invalid input. Exiting the program. Have a good day!")
-        exit()  # Exit on invalid input
+        exit()
+
 
 if __name__ == "__main__":
     main()
