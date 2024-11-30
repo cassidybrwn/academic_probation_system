@@ -124,7 +124,7 @@ def login():
 
 def main():
     """Main program flow."""
-    print("Welcome to the GPA Monitoring System")
+    print("Welcome to the University of Technology GPA Monitoring System")
 
     role = login()
     if role == "student":
