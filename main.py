@@ -37,10 +37,10 @@ def get_student_data(student_id, year):
         student = cursor.fetchone()
 
         # Fetch module grades for the student
-        cursor.execute("""
-            SELECT m.ModuleName, d.Year, d.Semester, m.Credits, d.GradePoints
-            FROM ModuleDetails d
-            JOIN ModuleMaster m ON d.ModuleID = m.ModuleID
+        cursor.execute(""" 
+            SELECT m.ModuleName, d.Year, d.Semester, m.Credits, d.GradePoints 
+            FROM ModuleDetails d 
+            JOIN ModuleMaster m ON d.ModuleID = m.ModuleID 
             WHERE d.StudentId = %s AND d.Year = %s
         """, (student_id, year))
         modules = cursor.fetchall()
@@ -58,7 +58,7 @@ def calculate_gpa_with_prolog(modules):
     """Calculate GPA and cumulative GPA using Prolog."""
     # Separate modules by semester
     sem1_modules = [m for m in modules if m['Semester'] == '1']
-    sem2_modules = [m for m in modules if m['Semester'] == '2']
+    sem2_modules = [m for m in modules if m['Semester'] == '2']    
 
     # Helper function to calculate GPA
     def calculate_semester_gpa(modules):
@@ -76,18 +76,23 @@ def calculate_gpa_with_prolog(modules):
     gpa_sem2 = calculate_semester_gpa(sem2_modules)
 
     # Calculate cumulative GPA
-    total_grade_points = sum(m['Credits'] * m['GradePoints'] for m in modules)  # Use dictionary keys
-    total_credits = sum(m['Credits'] for m in modules)  # Use dictionary keys
+    sem1_grade_points = sum(m['Credits'] * m['GradePoints'] for m in sem1_modules)
+    sem1_credits = sum(m['Credits'] for m in sem1_modules)
+    
+    sem2_grade_points = sum(m['Credits'] * m['GradePoints'] for m in sem2_modules)
+    sem2_credits = sum(m['Credits'] for m in sem2_modules)
 
-
-    # edit calculations *********
+    # Query Prolog for cumulative GPA calculation
     cumulative_query = list(prolog.query(
-        f"calculate_cumulative_gpa({gpa_sem1}, {gpa_sem2}, CumulativeGPA)"
+        f"calculate_cumulative_gpa({sem1_grade_points}, {sem1_credits}, {sem2_grade_points}, {sem2_credits}, CumulativeGPA)"
     ))
-    cumulative_gpa = cumulative_query[0]['CumulativeGPA'] if cumulative_query else gpa_sem1
+
+    if cumulative_query:
+        cumulative_gpa = cumulative_query[0]['CumulativeGPA']
+    else:
+        cumulative_gpa = gpa_sem1  # If no Semester 2 data, fallback to Semester 1 GPA
 
     return gpa_sem1, gpa_sem2, cumulative_gpa
-
 
 
 def generate_report(student_id, year):
@@ -134,6 +139,13 @@ def main():
         print("Default GPA updated successfully!")
     else:
         print("Invalid choice. Exiting.")
+
+    # Ask if the user wants to run the program again
+    again = input("\nWould you like to run again? (yes/no): ").strip().lower()
+    if again == 'yes':
+        main()  # Run the program again
+    else:
+        print("Exiting. Have a Nice Day!")
 
 
 if __name__ == "__main__":
