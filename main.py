@@ -142,7 +142,7 @@ def main():
 
     # Ask if the user wants to run the program again
     again = input("\nWould you like to run again? (yes/no): ").strip().lower()
-    if again == 'yes':
+    if again == 'yes' or 'y':
         main()  # Run the program again
     else:
         print("Exiting. Have a Nice Day!")
