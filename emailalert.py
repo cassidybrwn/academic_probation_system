@@ -14,19 +14,19 @@ def send_email_alert(student_id, name, email, programme, school):
     )
     msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"] = "enchantoalder@gmail.com"
+    msg["From"] = "henryjason495@gmail.com"
 
     # Add recipients
     recipients = [
         email,  # Student email
-        "darynnbrown@gmail.com",
-        "enchantoalder@gmail.com"
+        "cassyroo17@gmail.com",
+        "petagayemundle@gmail.com"
     ]
     msg["To"] = ", ".join(recipients)
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:  # Adjust SMTP settings as needed
-            server.login("enchantoalder@gmail.com", "rpjg lslg nawi hlze")  # Replace with real credentials
+            server.login("henryjason495@gmail.com", "rpjg lslg nawi hlze")  # Replace with real credentials
             server.sendmail(msg["From"], recipients, msg.as_string())
         print(f"Email alert sent to {email} and other stakeholders.")
     except Exception as e:
